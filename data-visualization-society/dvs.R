@@ -7,6 +7,8 @@ library(grid)
 library(ggtext)
 library(hrbrthemes)
 
+options(pillar.sigfig = 5)
+
 # hrbrthemes::import_roboto_condensed()
 
 data <-
@@ -16,6 +18,12 @@ data <-
   )
 
 MONTHS <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+
+TURQUOISE <- "#2db1a4" # Data
+MUSTARD <- "#dcb22a"   # Visualization
+PLUM <- "#9f5f9c"      # Society
+
+line_colors <- list(data = TURQUOISE, visualization = MUSTARD, society = PLUM)
 
 is.na(data) %>% colSums()
 data <- data %>% na.omit()
@@ -62,33 +70,46 @@ shifter <- function(x, n = 1) {
   }
 }
 
+color_shifter <- function(x, color, n = 1) {
+  if (n == 0) {
+    x
+  }
+  else {
+    x <- c(x[length(x)], x[c(1:(length(x) - 1))])
+    x[which(!(x %in% x[duplicated(x)]))] <- color
+    x
+  }
+}
+
 generate_monthly_plots <-
   function(data,
            months_list,
            cols,
            group_col,
            month_col,
-           main_color = "#69b3a2",
            secondary_color = "#E8E8E8") {
-    color_list <- c(
-      "#69b3a2",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8",
-      "#E8E8E8"
-    )
+    month_col <- c(month_col)
+    
+    color_filter <- data %>%
+      group_by(index = get(month_col)) %>%
+      summarise(
+        data = mean(data),
+        visualization = mean(visualization),
+        society = mean(society)
+      ) %>%
+      mutate(higher_mean_value = apply(.[, 2:4], 1, function(x)
+        names(x)[which.max(x)])) %>%
+      arrange(factor(index, levels = months_list), desc(index))
+    
+    first_value <- (color_filter %>% head(n=1))$higher_mean_value
+    
+    color_list <-
+      c(line_colors[[first_value]], rep(secondary_color, length(months_list) - 1))
+    
+    color_filter <- color_filter %>% 
+      mutate(next_higher_mean_value=lead(higher_mean_value, default = first_value))
     
     plots = list()
-    
-    month_col <- c(month_col)
     
     first_col_order <- which(colnames(data) == head(cols, n = 1))
     last_col_order <- which(colnames(data) == tail(cols, n = 1))
@@ -117,7 +138,9 @@ generate_monthly_plots <-
       
       plots[[m]] = plot
       
-      color_list <- shifter(color_list)
+      update_color <- line_colors[[(color_filter %>% filter(index == m))$next_higher_mean_value]]
+      
+      color_list <- color_shifter(color_list, update_color)
     }
     
     return(plots)
@@ -127,7 +150,7 @@ cols_to_plot <- c("data", "visualization", "society")
 plots_list <-
   generate_monthly_plots(sample, MONTHS_YEAR, cols_to_plot, "year_month", "year_month")
 
-# do.call("grid.arrange", c(plots_list, ncol = floor(sqrt(length(plots_list)))))
+# Alternative: do.call("grid.arrange", c(plots_list, ncol = floor(sqrt(length(plots_list)))))
 g <- grid.arrange(
   grobs = plots_list,
   layout_matrix = rbind(c(1, 2, 3),
@@ -149,4 +172,9 @@ g <- grid.arrange(
   )
 )
 
-ggsave("teste.png", g, width = 210, height = 297, units = "mm")
+# A4 (horizontal)
+ggsave("teste.png",
+       g,
+       width = 297,
+       height = 210,
+       units = "mm")
