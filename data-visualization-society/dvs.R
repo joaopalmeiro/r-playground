@@ -9,6 +9,8 @@ library(hrbrthemes)
 
 options(pillar.sigfig = 5)
 
+# 11.5 -> size (points)
+
 # hrbrthemes::import_roboto_condensed()
 
 data <-
@@ -19,11 +21,14 @@ data <-
 
 MONTHS <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 
-TURQUOISE <- "#2db1a4" # Data
-MUSTARD <- "#dcb22a"   # Visualization
-PLUM <- "#9f5f9c"      # Society
+TURQUOISE <- "#2DB1A4" # Data
+MUSTARD <- "#DCB22A"   # Visualization
+PLUM <- "#9F5F9C"      # Society
 
-line_colors <- list(data = TURQUOISE, visualization = MUSTARD, society = PLUM)
+line_colors <-
+  list(data = TURQUOISE,
+       visualization = MUSTARD,
+       society = PLUM)
 
 is.na(data) %>% colSums()
 data <- data %>% na.omit()
@@ -81,13 +86,19 @@ color_shifter <- function(x, color, n = 1) {
   }
 }
 
+capitalize <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  return(x)
+}
+
 generate_monthly_plots <-
   function(data,
            months_list,
            cols,
            group_col,
            month_col,
-           secondary_color = "#E8E8E8") {
+           secondary_color = "#ECECEC",
+           scale_type = "globalminmax") {
     month_col <- c(month_col)
     
     color_filter <- data %>%
@@ -101,21 +112,32 @@ generate_monthly_plots <-
         names(x)[which.max(x)])) %>%
       arrange(factor(index, levels = months_list), desc(index))
     
-    first_value <- (color_filter %>% head(n=1))$higher_mean_value
+    first_value <- (color_filter %>% head(n = 1))$higher_mean_value
     
     color_list <-
       c(line_colors[[first_value]], rep(secondary_color, length(months_list) - 1))
     
-    color_filter <- color_filter %>% 
-      mutate(next_higher_mean_value=lead(higher_mean_value, default = first_value))
+    color_filter <- color_filter %>%
+      mutate(next_higher_mean_value = lead(higher_mean_value, default = first_value))
     
     plots = list()
     
     first_col_order <- which(colnames(data) == head(cols, n = 1))
     last_col_order <- which(colnames(data) == tail(cols, n = 1))
     
+    last_month <- tail(months_list, n = 1)
+    
     for (m in months_list) {
       months_list <- c(months_list[-1], months_list[1])
+      
+      label_colors <- c("grey30", "grey30", "grey30")
+      label_color_index <-
+        which(names(line_colors) == (color_filter %>% filter(index == m))$higher_mean_value)
+      label_colors[label_color_index] <-
+        line_colors[[(color_filter %>% filter(index == m))$higher_mean_value]]
+      
+      # title <- bquote(.(m))
+      title <- m
       
       plot <- data %>%
         arrange(factor(get(month_col), levels = months_list), desc(get(month_col))) %>%
@@ -123,22 +145,45 @@ generate_monthly_plots <-
           columns = cols,
           groupColumn = group_col,
           showPoints = FALSE,
-          scale = "globalminmax",
+          scale = scale_type,
           alphaLines = 1,
           order = first_col_order:last_col_order
         ) +
-        scale_color_manual(values = color_list) + list(
+        scale_color_manual(values = color_list) +
+        list(
           theme_ipsum_rc() + theme(
             legend.position = "none",
             panel.grid.minor = element_blank(),
             plot.margin =
-              margin(10, 10, 10, 10)
+              margin(11.5, 11.5, 11.5, 11.5),
+            axis.text.x = element_markdown(colour = label_colors),
+            plot.title = element_text(
+              size = 18 / 2,
+              face = "plain",
+              hjust = 0.5,
+              margin = margin(b = 10 / 2)
+            ),
+            plot.title.position = "panel" # "plot"
           )
-        )
+        ) + scale_x_discrete(
+          labels = function(x)
+            capitalize(x)
+        ) + labs(title = title)
+      
+      if (m == last_month) {
+        plot <-
+          plot + theme(plot.margin = margin(11.5 * 2 - 11.5, 11.5 * 2 - 11.5, 0, 0)) +
+          ylab("Avg scores") +
+          xlab("Survey sections")
+      } else {
+        plot <- plot + theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank())
+      }
       
       plots[[m]] = plot
       
-      update_color <- line_colors[[(color_filter %>% filter(index == m))$next_higher_mean_value]]
+      update_color <-
+        line_colors[[(color_filter %>% filter(index == m))$next_higher_mean_value]]
       
       color_list <- color_shifter(color_list, update_color)
     }
@@ -149,6 +194,7 @@ generate_monthly_plots <-
 cols_to_plot <- c("data", "visualization", "society")
 plots_list <-
   generate_monthly_plots(sample, MONTHS_YEAR, cols_to_plot, "year_month", "year_month")
+# plots_list
 
 # Alternative: do.call("grid.arrange", c(plots_list, ncol = floor(sqrt(length(plots_list)))))
 g <- grid.arrange(
@@ -162,13 +208,21 @@ g <- grid.arrange(
     "Title",
     x = 10,
     hjust = 0,
-    gp = gpar(fontsize = 20, fontfamily = "Roboto Condensed"),
+    gp = gpar(
+      fontsize = 18,
+      fontfamily = "Roboto Condensed",
+      col = "grey30"
+    ),
     default.units = "points"
   ),
   padding = unit(25, "points"),
   bottom = textGrob(
     "Source: Data Visualization Society | Chart: João Palmeiro",
-    gp = gpar(fontsize = 5)
+    gp = gpar(
+      fontsize = 5,
+      fontfamily = "Roboto Condensed",
+      col = "grey30"
+    )
   )
 )
 
