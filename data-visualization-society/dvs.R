@@ -9,8 +9,6 @@ library(hrbrthemes)
 
 options(pillar.sigfig = 5)
 
-# 11.5 -> size (points)
-
 # hrbrthemes::import_roboto_condensed()
 
 data <-
@@ -54,6 +52,8 @@ available_dates
 MONTHS_YEAR <- as.character(pull(distinct(data, year_month)))
 MONTHS_YEAR
 
+data$year_month <- factor(data$year_month, levels = MONTHS_YEAR)
+
 # Source: https://jennybc.github.io/purrr-tutorial/ls12_different-sized-samples.html
 sample <- data %>%
   group_by(year_month) %>%
@@ -67,12 +67,10 @@ sample <- data %>%
 sample
 
 shifter <- function(x, n = 1) {
-  if (n == 0) {
+  if (n == 0)
     x
-  }
-  else {
+  else
     c(x[length(x)], x[c(1:(length(x) - 1))])
-  }
 }
 
 color_shifter <- function(x, color, n = 1) {
@@ -139,6 +137,8 @@ generate_monthly_plots <-
       # title <- bquote(.(m))
       title <- m
       
+      # print(data %>% arrange(factor(get(month_col), levels = months_list), desc(get(month_col))), n = 100)
+      
       plot <- data %>%
         arrange(factor(get(month_col), levels = months_list), desc(get(month_col))) %>%
         ggparcoord(
@@ -157,7 +157,7 @@ generate_monthly_plots <-
             plot.margin =
               margin(11.5, 11.5, 11.5, 11.5),
             axis.text.x = element_markdown(colour = label_colors),
-            plot.title = element_text(
+            plot.title = element_markdown(
               size = 18 / 2,
               face = "plain",
               hjust = 0.5,
@@ -166,15 +166,27 @@ generate_monthly_plots <-
             plot.title.position = "panel" # "plot"
           )
         ) + scale_x_discrete(
+          expand = expansion(mult = c(.1, .1)),
           labels = function(x)
             capitalize(x)
         ) + labs(title = title)
       
       if (m == last_month) {
+        explain_title <-
+          paste(
+            title,
+            " <span style = 'color:",
+            line_colors[[(color_filter %>% filter(index == m))$higher_mean_value]],
+            ";'>",
+            "(section with the highest average of average scores)",
+            "</span>",
+            sep = ""
+          )
+        
         plot <-
           plot + theme(plot.margin = margin(11.5 * 2 - 11.5, 11.5 * 2 - 11.5, 0, 0)) +
-          ylab("Avg scores") +
-          xlab("Survey sections")
+          ylab("Average scores") +
+          xlab("Survey sections") + labs(title = explain_title)
       } else {
         plot <- plot + theme(axis.title.y = element_blank(),
                              axis.title.x = element_blank())
@@ -185,6 +197,7 @@ generate_monthly_plots <-
       update_color <-
         line_colors[[(color_filter %>% filter(index == m))$next_higher_mean_value]]
       
+      # color_list <- shifter(color_list)
       color_list <- color_shifter(color_list, update_color)
     }
     
@@ -192,8 +205,12 @@ generate_monthly_plots <-
   }
 
 cols_to_plot <- c("data", "visualization", "society")
+# plots_list <-
+#   generate_monthly_plots(sample, MONTHS_YEAR, cols_to_plot, "year_month", "year_month")
+# plots_list <-
+#   generate_monthly_plots(sample, MONTHS, cols_to_plot, "month", "month")
 plots_list <-
-  generate_monthly_plots(sample, MONTHS_YEAR, cols_to_plot, "year_month", "year_month")
+  generate_monthly_plots(data, MONTHS_YEAR, cols_to_plot, "year_month", "year_month")
 # plots_list
 
 # Alternative: do.call("grid.arrange", c(plots_list, ncol = floor(sqrt(length(plots_list)))))
@@ -205,11 +222,11 @@ g <- grid.arrange(
                         c(10, 11, 12),
                         c(NA, 13, NA)),
   top = textGrob(
-    "Title",
+    "How were the section-based average scores for each new member per month?",
     x = 10,
     hjust = 0,
     gp = gpar(
-      fontsize = 18,
+      fontsize = 18 + 6,
       fontfamily = "Roboto Condensed",
       col = "grey30"
     ),
@@ -217,9 +234,9 @@ g <- grid.arrange(
   ),
   padding = unit(25, "points"),
   bottom = textGrob(
-    "Source: Data Visualization Society | Chart: João Palmeiro",
+    "Source: Data Visualization Society <www.datavisualizationsociety.com> | Chart: João Palmeiro <Twitter: @joaompalmeiro>",
     gp = gpar(
-      fontsize = 5,
+      fontsize = 9 / 1.5,
       fontfamily = "Roboto Condensed",
       col = "grey30"
     )
@@ -227,7 +244,7 @@ g <- grid.arrange(
 )
 
 # A4 (horizontal)
-ggsave("teste.png",
+ggsave("charts/chart.png",
        g,
        width = 297,
        height = 210,
