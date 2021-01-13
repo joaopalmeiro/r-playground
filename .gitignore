@@ -38,3 +38,7 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .Rproj.user
+
+# Strava
+strava/data/*.csv
+strava/data/activities/*.gpx
