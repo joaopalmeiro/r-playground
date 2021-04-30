@@ -4,15 +4,51 @@ library(ggplot2)
 library(styler)
 library(tibble)
 library(svglite)
+library(haven)
 
 n <- 100
 df <- n - 1
 alpha <- 0.05
+mu <- 40
+quantile <- qt(1 - alpha, df)
+
+data <- read_sav("data.sav")
+mean(data$Idade)
+sd(data$Idade)
+
+t_test <- t.test(
+  data$Idade,
+  conf.level = 1 - alpha,
+  alternative = "less",
+  mu = mu
+)
+
+# ~ -1.956816
+statistic <- unname(t_test[["statistic"]])
+statistic
 
 dist_df <- tribble(
   ~dist, ~df,
   "t", df
 )
+
+x_axis_labels <- c(
+  -4,
+  statistic,
+  0,
+  quantile,
+  4
+)
+names(x_axis_labels) <- c(
+  "-4",
+  toString(round(statistic, 2)),
+  "0",
+  toString(round(quantile, 2)),
+  "4"
+)
+x_axis_labels
+
+x_axis_face <- c("plain", "bold", "plain", "bold", "plain")
 
 # More info:
 # - https://mjskay.github.io/ggdist/reference/stat_dist_slabinterval.html
@@ -22,7 +58,7 @@ dist_df %>%
   ggplot(aes(dist = dist, arg1 = df)) +
   # Probability density function (pdf)
   stat_dist_slab(
-    aes(fill = stat(x > qt(1 - alpha, df))),
+    aes(fill = stat(x > quantile)),
     show.legend = FALSE,
     slab_type = "pdf",
     orientation = "horizontal",
@@ -32,8 +68,12 @@ dist_df %>%
     # normalize = "none"
   ) +
   scale_fill_manual(values = c("#ECEFF4", "#81A1C1")) +
+  scale_x_continuous(
+    breaks = x_axis_labels,
+    limits = c(-4, 4),
+  ) +
   coord_cartesian(expand = FALSE) +
-  xlim(-4, 4) +
+  # xlim(-4, 4) +
   theme_ggdist() +
   theme(
     axis.title.y = element_blank(),
@@ -44,7 +84,7 @@ dist_df %>%
     axis.line.x = element_line(color = "#D8DEE9"),
     axis.ticks.x = element_line(color = "#D8DEE9"),
     axis.text.x = element_text(
-      color = "#3B4252", size = 11
+      color = "#3B4252", size = 11, face = x_axis_face
     ),
   )
 

@@ -43,3 +43,4 @@ vignettes/*.pdf
 strava/data/*.csv
 strava/data/activities/*.gpx
 distributions/student_t_dist.svg
+distributions/data.sav
