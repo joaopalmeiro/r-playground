@@ -33,22 +33,28 @@ dist_df <- tribble(
 )
 
 x_axis_labels <- c(
-  -4,
+  # -4,
   statistic,
   0,
-  quantile,
-  4
+  quantile
+  # 4
 )
 names(x_axis_labels) <- c(
-  "-4",
+  # "-4",
   toString(round(statistic, 2)),
   "0",
-  toString(round(quantile, 2)),
-  "4"
+  toString(round(quantile, 2))
+  # "4"
 )
 x_axis_labels
 
-x_axis_face <- c("plain", "bold", "plain", "bold", "plain")
+x_axis_face <- c(
+  # "plain",
+  "bold",
+  "plain",
+  "bold"
+  # "plain"
+)
 
 # More info:
 # - https://mjskay.github.io/ggdist/reference/stat_dist_slabinterval.html
@@ -67,6 +73,26 @@ dist_df %>%
     normalize = "all", # The maximum height across all data is 1.
     # normalize = "none"
   ) +
+  geom_segment(
+    aes(
+      x = 0,
+      y = 0,
+      xend = 0,
+      yend = 0.9
+    ),
+    color = "#D8DEE9",
+    linetype = "dotdash"
+  ) +
+  geom_segment(
+    aes(
+      x = statistic,
+      y = 0,
+      xend = statistic,
+      yend = (dt(statistic, 99) * 0.9) / dt(0, 99)
+    ),
+    color = "#D8DEE9",
+    linetype = "dotdash"
+  ) +
   scale_fill_manual(values = c("#ECEFF4", "#81A1C1")) +
   scale_x_continuous(
     breaks = x_axis_labels,
@@ -84,7 +110,9 @@ dist_df %>%
     axis.line.x = element_line(color = "#D8DEE9"),
     axis.ticks.x = element_line(color = "#D8DEE9"),
     axis.text.x = element_text(
-      color = "#3B4252", size = 11, face = x_axis_face
+      color = "#3B4252",
+      size = 11,
+      face = x_axis_face
     ),
   )
 
