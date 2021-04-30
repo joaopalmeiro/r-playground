@@ -81,7 +81,8 @@ dist_df %>%
       yend = 0.9
     ),
     color = "#D8DEE9",
-    linetype = "dotdash"
+    # linetype = "dotdash"
+    linetype = "longdash"
   ) +
   geom_segment(
     aes(
@@ -91,7 +92,8 @@ dist_df %>%
       yend = (dt(statistic, 99) * 0.9) / dt(0, 99)
     ),
     color = "#D8DEE9",
-    linetype = "dotdash"
+    # linetype = "dotdash"
+    linetype = "longdash"
   ) +
   scale_fill_manual(values = c("#ECEFF4", "#81A1C1")) +
   scale_x_continuous(
@@ -112,7 +114,8 @@ dist_df %>%
     axis.text.x = element_text(
       color = "#3B4252",
       size = 11,
-      face = x_axis_face
+      face = x_axis_face,
+      hjust = 0.5
     ),
   )
 
