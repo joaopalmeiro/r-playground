@@ -43,7 +43,9 @@ dist_df %>%
     axis.title.x = element_blank(),
     axis.line.x = element_line(color = "#D8DEE9"),
     axis.ticks.x = element_line(color = "#D8DEE9"),
-    axis.text.x = element_text(color = "#3B4252"),
+    axis.text.x = element_text(
+      color = "#3B4252", size = 11
+    ),
   )
 
 device <- "svg"
@@ -52,8 +54,8 @@ device <- "svg"
 ggsave(
   here(paste0("student_t_dist.", device)),
   dpi = 320,
-  width = 4.5,
-  height = 2.5,
+  width = 5.5,
+  height = 3.5,
   units = "in",
   device = device
 )
