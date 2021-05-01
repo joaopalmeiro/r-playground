@@ -12,6 +12,8 @@ alpha <- 0.05
 mu <- 40
 quantile <- qt(1 - alpha, df)
 
+font_size <- 11
+
 data <- read_sav("data.sav")
 mean(data$Idade)
 sd(data$Idade)
@@ -36,15 +38,15 @@ x_axis_labels <- c(
   # -4,
   statistic,
   0,
-  quantile
-  # 4
+  quantile,
+  4
 )
 names(x_axis_labels) <- c(
   # "-4",
   toString(round(statistic, 2)),
   "0",
-  toString(round(quantile, 2))
-  # "4"
+  toString(round(quantile, 2)),
+  paste0("t(", df, ")")
 )
 x_axis_labels
 
@@ -52,8 +54,15 @@ x_axis_face <- c(
   # "plain",
   "bold",
   "plain",
-  "bold"
-  # "plain"
+  "bold",
+  "plain"
+)
+
+x_axis_hjust <- c(
+  0.5,
+  0.5,
+  0.5,
+  1 # or 0
 )
 
 # More info:
@@ -66,6 +75,7 @@ dist_df %>%
   stat_dist_slab(
     aes(fill = stat(x > quantile)),
     show.legend = FALSE,
+    slab_size = 1, # Stroke width
     slab_type = "pdf",
     orientation = "horizontal",
     # fill = NA,
@@ -104,18 +114,25 @@ dist_df %>%
   # xlim(-4, 4) +
   theme_ggdist() +
   theme(
+    plot.margin = margin(
+      t = 0,
+      r = font_size / 2, # or font_size * 3
+      b = font_size / 2,
+      l = font_size / 2, # or font_size
+      unit = "pt"
+    ),
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
     axis.line.y = element_blank(),
     axis.title.x = element_blank(),
     axis.line.x = element_line(color = "#D8DEE9"),
-    axis.ticks.x = element_line(color = "#D8DEE9"),
+    axis.ticks.x = element_blank(),
     axis.text.x = element_text(
       color = "#3B4252",
-      size = 11,
+      size = font_size,
       face = x_axis_face,
-      hjust = 0.5
+      hjust = x_axis_hjust
     ),
   )
 
@@ -123,7 +140,7 @@ device <- "svg"
 # device <- "png"
 
 ggsave(
-  here(paste0("student_t_dist.", device)),
+  here(paste("student_t_dist", device, sep = ".")),
   dpi = 320,
   width = 5.5,
   height = 3.5,
