@@ -105,6 +105,17 @@ dist_df %>%
     # linetype = "dotdash"
     linetype = "longdash"
   ) +
+  # Add a repeated layer, but without the filled area,
+  # in order to overlap the ends of the reference lines.
+  # Comment in case of post-editing in Figma.
+  stat_dist_slab(
+    slab_size = 1, # Stroke width
+    slab_type = "pdf",
+    orientation = "horizontal",
+    fill = NA,
+    color = "#3B4252",
+    normalize = "all",
+  ) +
   scale_fill_manual(values = c("#ECEFF4", "#81A1C1")) +
   scale_x_continuous(
     breaks = x_axis_labels,
@@ -136,8 +147,8 @@ dist_df %>%
     ),
   )
 
-device <- "svg"
-# device <- "png"
+# device <- "svg"
+device <- "png"
 
 ggsave(
   here(paste("student_t_dist", device, sep = ".")),
