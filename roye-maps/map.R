@@ -129,24 +129,44 @@ m <- tm_shape(buildings_val25) +
   tm_polygons("yr_cl",
     border.col = "transparent",
     palette = col_spec_fun(15),
-    textNA = "Without data",
-    title = ""
+    # textNA = "Missing data",
+    showNA = FALSE,
+    # Legend title
+    title = "" # No legend title
   )
 
 # Create the final map
-m +
+# Reference: https://twitter.com/dr_xeo/status/1389584111392669699/photo/1
+map <- m +
+  # More info: https://rdrr.io/cran/tmap/man/tm_layout.html
   tm_layout(
+    # Chart title
+    main.title = "València",
+    main.title.position = "center",
+    main.title.color = "white",
+    main.title.fontfamily = "Montserrat",
+    # Background
     bg.color = "black",
-    outer.bg.color = "black",
+    outer.bg.color = "red",
+    outer.margins = c(0, 0, 0, 0),
+    # Legend
     legend.outside = TRUE,
+    legend.position = c("left", "center"),
     legend.text.color = "white",
-    legend.text.fontfamily = "Montserrat",
-    panel.label.fontfamily = "Montserrat",
-    panel.label.color = "white",
-    panel.label.bg.color = "black",
-    panel.label.size = 5,
-    panel.label.fontface = "bold"
+    legend.text.fontfamily = "Montserrat"
   )
+map
+
+tmap_save(
+  tm = map,
+  filename = "valencia.png",
+  width = 12,
+  height = 12,
+  units = "in",
+  dpi = 300
+)
+
+
 
 # Interactive map
 # tmap_leaflet(m)
